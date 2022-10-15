@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+set -e
+
+case "$1" in
+    configure)
+
+    ssh-keygen -N "" -t ed25519 -f /etc/sshd-tor/ssh_host_ed25519_key 2>/dev/null
+
+    openssl genpkey -algorithm x25519 -out /tmp/sshd-tor.pem
+    CLIENT_PRIVATE=$(openssl pkey -in /tmp/sshd-tor.pem -outform der | tail -c 32 | base32 | sed -e "s/=//g")
+    CLIENT_PUBLIC=$(openssl pkey -in /tmp/sshd-tor.pem -outform der -pubout | tail -c 32 | base32 | sed -e "s/=//g")
+    rm -rf /tmp/sshd-tor.pem
+
+    mkdir -p /var/lib/tor/sshd-service/authorized_clients
+    echo -n "descriptor:x25519:$CLIENT_PUBLIC" > /var/lib/tor/sshd-service/authorized_clients/client.auth
+
+    chown -R debian-tor:debian-tor /var/lib/tor/sshd-service
+    chmod 700 /var/lib/tor/sshd-service
+
+    cp /etc/tor/torrc /etc/tor/torrc.orig
+    cp /etc/tor/torrc.sshd-tor /etc/tor/torrc
+
+    SSH_PORT=$((52000 + $RANDOM % 999))
+    sed -i "s/%PORT%/$SSH_PORT/" /etc/tor/torrc
+    sed -i "s/%PORT%/$SSH_PORT/" /etc/sshd-tor/sshd_config
+
+    systemctl daemon-reload
+    systemctl enable tor
+    systemctl enable sshd-tor
+    systemctl restart tor
+    systemctl restart sshd-tor
+
+    while ! [ -f /var/lib/tor/sshd-service/hostname ]; do
+      sleep 1s
+    done
+
+    SERVICE_ADDRESS="$(cat /var/lib/tor/sshd-service/hostname)"
+    SERVICE_SHORTNAME=${SERVICE_ADDRESS:0:6}
+
+    echo "
+
+===== SSHD-TOR SERVICE =========
+
+Hostname $SERVICE_SHORTNAME
+Address  $SERVICE_ADDRESS
+SSH Port 22:127.0.0.1:$SSH_PORT
+PubKey   $CLIENT_PUBLIC
+PrivKey  $CLIENT_PRIVATE
+
+===== CLIENT CONFIGURATION =====
+
+echo \"ClientOnionAuthDir /etc/tor/onions\" >> /etc/tor/torrc
+mkdir -p /etc/tor/onions
+echo \"$SERVICE_ADDRESS:descriptor:x25519:$CLIENT_PRIVATE\" > /etc/tor/onions/$SERVICE_SHORTNAME.auth_private
+chown -R debian-tor:debian-tor /etc/tor/onions
+chmod -R 700 /etc/tor/onions
+systemctl restart tor
+
+Add to ~/.ssh/config:
+
+Host $SERVICE_SHORTNAME
+    hostname $SERVICE_ADDRESS
+    proxyCommand ncat --proxy 127.0.0.1:9050 --proxy-type socks5 %h %p
+
+================================
+
+"
+    ;;
+esac
+
+exit 0

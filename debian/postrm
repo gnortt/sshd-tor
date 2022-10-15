@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
+    systemctl --system daemon-reload >/dev/null || true
+fi
+
+if [ "$1" = "remove" ]; then
+    if [ -x "/usr/bin/deb-systemd-helper" ]; then
+        deb-systemd-helper mask 'sshd-tor.service' >/dev/null || true
+    fi
+fi
+
+if [ "$1" = "purge" ]; then
+    if [ -x "/usr/bin/deb-systemd-helper" ]; then
+        deb-systemd-helper purge 'sshd-tor.service' >/dev/null || true
+        deb-systemd-helper unmask 'sshd-tor.service' >/dev/null || true
+    fi
+
+    if [ -f /etc/tor/torrc.orig ]; then
+        mv /etc/tor/torrc.orig /etc/tor/torrc
+    fi
+    
+    rm -rf /etc/tor/torrc.sshd-tor
+    rm -rf /etc/sshd-tor
+    rm -rf /var/lib/tor/sshd-service
+fi
+
+exit 0

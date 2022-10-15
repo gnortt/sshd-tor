@@ -1,0 +1,9 @@
+Source: sshd-tor
+Maintainer: user@localhost
+
+Package: sshd-tor
+Architecture: any
+Description: sshd-tor
+Section: net
+Priority: optional
+Depends: openssl, openssh-server, tor

@@ -1,0 +1,5 @@
+User debian-tor
+DataDirectory /var/lib/tor
+
+HiddenServiceDir /var/lib/tor/sshd-service
+HiddenServicePort 22 127.0.0.1:%PORT%

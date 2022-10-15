@@ -1,0 +1,27 @@
+Port %PORT%
+ListenAddress 127.0.0.1
+
+HostKey /etc/sshd-tor/ssh_host_ed25519_key
+
+PermitRootLogin without-password
+
+KexAlgorithms curve25519-sha256@libssh.org
+Ciphers chacha20-poly1305@openssh.com
+MACs hmac-sha2-256-etm@openssh.com
+HostKeyAlgorithms ssh-ed25519
+
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+
+X11Forwarding no
+PrintMotd no
+PrintLastLog no
+
+AcceptEnv LANG LC_*
+
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+UsePAM no
+UseDNS no
+
+AllowUsers root
