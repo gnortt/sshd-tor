@@ -3,9 +3,9 @@
 set -e
 
 function _check_dependencies {
-    for pkg in $*; do
-        if ! $(dpkg-query -W --showformat='${Status}\n' $pkg | grep 'install ok' 1> /dev/null); then
-            _confirm_action "Missing dependency $pkg, install now?" && apt -y update && apt -y install $pkg
+    for pkg in "$@"; do
+        if ! dpkg-query -W --showformat='${Status}\n' "${pkg}" | grep 'install ok' 1> /dev/null; then
+            _confirm_action "Missing dependency ${pkg}, install now?" && apt -y update && apt -y install "$pkg"
             return 1
         fi
     done
@@ -13,7 +13,7 @@ function _check_dependencies {
 
 function _confirm_action {
     while true; do
-        read -p "$* [Y/n]: " yn
+        read -r -p "$* [Y/n]: " yn
 
         case $yn in
             [Yy]*) return 0;;  

@@ -21,7 +21,7 @@ case "$1" in
     cp /etc/tor/torrc /etc/tor/torrc.orig
     cp /etc/tor/torrc.sshd-tor /etc/tor/torrc
 
-    SSH_PORT=$((52000 + $RANDOM % 999))
+    SSH_PORT=$((52000 + RANDOM % 999))
     sed -i "s/%PORT%/$SSH_PORT/" /etc/tor/torrc
     sed -i "s/%PORT%/$SSH_PORT/" /etc/sshd-tor/sshd_config
 
