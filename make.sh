@@ -25,7 +25,7 @@ function _confirm_action {
 
 case "$1" in
     install)
-        _check_dependencies "openssl openssh-server tor"
+        _check_dependencies openssl openssh-server tor
 
         cp debian/sshd-tor.sshd-tor.service /lib/systemd/system/sshd-tor.service
         cp etc/tor/torrc.sshd-tor /etc/tor/torrc.sshd-tor
