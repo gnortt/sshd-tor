@@ -58,7 +58,7 @@ case "$1" in
     ;;
 
     builddeb)
-        _check_dependencies "debhelper build-essential"
+        _check_dependencies debhelper build-essential
         
         dpkg-buildpackage -us -uc -tc -b
     ;;
